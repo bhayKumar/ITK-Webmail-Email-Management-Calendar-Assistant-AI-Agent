@@ -18,7 +18,7 @@
 
 **Project Name:** IITK Webmail Email Management & Calendar Assistant AI Agent
 
-**Task:** Build an AI Agent that automates the manual task of managing IITK webmail emails and integrating them with calendar scheduling.
+**Task:** Built an AI Agent that automates the manual task of managing IITK webmail emails and integrating them with calendar scheduling.
 
 **Status:** Completed with source code, system design, and implementation logs
 

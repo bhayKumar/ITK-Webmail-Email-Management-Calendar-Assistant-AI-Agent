@@ -372,16 +372,5 @@ Question:
 
 ---
 
-## Submission Checklist
-
-- [x]  Source code pushed to GitHub repository
-- [x]  System design document included (README.md)
-- [ ]  Interaction logs documented
-- [x]  All required files in repository
-- [x]  README contains name, university (IIT Kanpur), department (Mechanical Engineering)
-- [ ]  Repository URL sent to evaluation team
-- [ ]  Demo video/screenshots included (optional but recommended)
-
----
 
 ##

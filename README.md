@@ -10,8 +10,6 @@
 
 **Project Title:**             IITK Webmail Email Management & Calendar Assistant AI Agent
 
-**Submission Date:**    November 3, 2025
-
 **Contact:**                    [abhaykumar23@iitk.ac.in](mailto:abhaykumar23@iitk.ac.in) | 8381824006
 
 # AI Agent Prototype - Deliverables Document

@@ -1,0 +1,14 @@
+flask
+flask_cors
+python-dateutil
+langchain-google-genai
+chromadb
+scikit-learn
+numpy
+faiss-cpu
+google-auth
+google-auth-oauthlib
+google-api-python-client
+pydantic
+langchain-core
+langgraph

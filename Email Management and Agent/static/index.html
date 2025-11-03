@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #F8F9FA;
+            color: #2C3E50;
+            padding: 20px;
+            /* prevent page from scrolling; inner panels will scroll on hover */
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+            /* use a fixed viewport-based height so inner columns can manage their own scrolling */
+            height: calc(100vh - 40px);
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2C3E50;
+        }
+
+        /* Left Sidebar - Mailbox */
+        .mailbox-section {
+              /* make mailbox much narrower */
+              flex: 0 0 12%;
+              min-width: 120px;
+              max-width: 160px;
+        }
+
+        .category-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+                padding: 8px 10px;
+                margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+                font-size: 13px;
+            position: relative;
+            border: 3px solid transparent;
+                /* reduced width to make cards compact */
+                width: 80px;
+            max-width: calc(100% - 40px);
+            box-sizing: border-box;
+                text-align: center;
+                white-space: normal;
+        }
+
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-card.active {
+            border-color: #2C3E50;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-card.academic {
+            background-color: #5DADE2;
+            color: #2C3E50;
+        }
+
+        .category-card.club {
+            background-color: #52BE80;
+            color: #2C3E50;
+        }
+
+        .category-card.general {
+            background-color: #D5DBDB;
+            color: #2C3E50;
+        }
+
+        /* hide previous decorative pill - we'll use an icon instead */
+        .category-card::before { display: none; }
+
+        /* category icon styling */
+        .category-icon {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 1;
+        }
+
+        .category-icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            color: rgba(0,0,0,0.9);
+            transition: transform 0.18s ease, opacity 0.18s ease, color 0.18s ease;
+            transform-origin: center;
+            opacity: 0.95;
+        }
+
+        .category-card:hover .category-icon svg,
+        .category-card.active .category-icon svg,
+        .category-card:focus .category-icon svg {
+            transform: scale(1.12);
+            opacity: 1;
+            color: #111;
+        }
+
+        /* Category label styling (text instead of icons) */
+        @font-face {
+            font-family: 'FK Display';
+            /* Add local font file if available. Update src to point to the actual font file in your project */
+            src: local('FK Display'), url('./fonts/FKDisplay.woff2') format('woff2');
+            font-weight: 400 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        .category-label {
+            font-family: 'FK Display', 'Segoe UI', Roboto, system-ui, -apple-system, 'Helvetica Neue', Arial;
+            font-size: 13px;
+            letter-spacing: 0.8px;
+            color: #111;
+            display: inline-block;
+            text-transform: uppercase;
+            padding: 2px 4px;
+        }
+
+        /* make cards keyboard accessible */
+        .category-card { outline: none; }
+        .category-card:focus { box-shadow: 0 0 0 3px rgba(93,173,226,0.25); }
+
+        /* Ensure cards wrap nicely on small screens */
+        .mailbox-section .category-card + .category-card {
+            margin-left: 0;
+        }
+
+            /* Make envelope icons smaller inside compact cards */
+            .category-card .envelope-icon {
+                font-size: 14px;
+                margin: 0 6px;
+            }
+
+        .envelope-icon {
+            font-size: 20px;
+            margin: 0 10px;
+        }
+
+        /* Middle Section - Current Email */
+        .email-section {
+            /* give middle section room but allow it to shrink on smaller viewports */
+            flex: 1 1 60%;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-width: 360px; /* reduced so chat doesn't get pushed off-screen */
+        }
+
+        /* Subject list (now merged into email-content) */
+        .subject-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+            max-height: 180px;
+            flex: 0 0 180px; /* fixed height area for subjects */
+            /* hide scrollbars by default; enable on hover */
+            overflow: hidden;
+            padding-right: 5px;
+            width: 100%; /* ensure subject list fills the wider middle column */
+        }
+
+        /* show scrollbar when user hovers or focuses inside the subject list */
+        .subject-list:hover,
+        .subject-list:focus-within {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* On touch devices, enable scrolling always */
+        @media (pointer: coarse) {
+            .subject-list {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .subject-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: #F2F3F4;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.08s ease;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        .subject-item:hover {
+            background: #E5E7E9;
+            transform: translateY(-2px);
+        }
+
+        .subject-item.active {
+            background: #3498DB;
+            color: white;
+        }
+
+        .email-content {
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            min-height: 200px;
+            /* make content area flexible and manage its own scrolling */
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            /* container will manage scrolling for the selected mail (header + body) as a single unit */
+            overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .email-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* allow placeholder to fill remaining space without forcing container height */
+            flex: 1 1 auto;
+            color: #7F8C8D;
+            font-size: 18px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .email-header {
+            margin-bottom: 20px;
+        }
+
+        .email-subject-label {
+            font-size: 12px;
+            color: #BDC3C7;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .email-subject {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2C3E50;
+            margin-bottom: 15px;
+        }
+
+        .email-from {
+            font-size: 16px;
+            color: #3498DB;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .email-date {
+            font-size: 12px;
+            color: #7F8C8D;
+            margin-bottom: 15px;
+        }
+
+        .email-divider {
+            height: 3px;
+            background-color: #3498DB;
+            border-radius: 2px;
+            margin: 20px 0;
+        }
+
+        .email-body {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #2C3E50;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            /* allow the body to take remaining space and scroll when hovered */
+            flex: 1 1 auto;
+        }
+        /* enable vertical scrolling for the selected-mail card (header+body) only when hovered */
+        .email-content:hover,
+        .email-content:focus-within {
+            overflow-y: auto;
+            padding-right: 6px; /* make room for scrollbar */
+        }
+
+        .menu-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 24px;
+            color: #7F8C8D;
+            cursor: pointer;
+        }
+
+        /* Right Sidebar - Chat */
+        .chat-section {
+            /* keep chat reasonably sized but allow stable layout */
+            flex: 0 0 25%;
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+            max-width: 420px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            background-color: #F8F9FA;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            min-height: 400px;
+            max-height: calc(100vh - 250px);
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message.user {
+            align-items: flex-end;
+        }
+
+        .chat-message.ai {
+            align-items: flex-start;
+        }
+
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .chat-message.user .chat-bubble {
+            background-color: #3498DB;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.ai .chat-bubble {
+            background-color: white;
+            color: #2C3E50;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #BDC3C7;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #3498DB;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            border: none;
+            background-color: #3498DB;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+            font-size: 18px;
+        }
+
+        .send-button:hover {
+            background-color: #2980B9;
+        }
+
+        .send-button:disabled {
+            background-color: #BDC3C7;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498DB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #E74C3C;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #7F8C8D;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .mailbox-section,
+            .email-section,
+            .chat-section {
+                flex: 1 0 100%;
+            }
+
+            .subject-list {
+                max-height: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar - Mailbox -->
+        <div class="section mailbox-section">
+            <div class="section-title">MAILBOX</div>
+            <div class="category-card" data-category="all" title="All mails" aria-label="All mails">
+                <span class="category-label">ALL</span>
+            </div>
+            <div class="category-card academic" data-category="academic" title="Academic mails" aria-label="Academic mails">
+                <span class="category-label">ACADS</span>
+            </div>
+            <div class="category-card club" data-category="club" title="Club mails" aria-label="Club mails">
+                <span class="category-label">CLUB</span>
+            </div>
+            <div class="category-card general" data-category="general" title="General mails" aria-label="General mails">
+                <span class="category-label">GEN</span>
+            </div>
+        </div>
+
+        <!-- Middle Section - Current Open Mail -->
+        <div class="section email-section">
+            <!-- removed title to save space -->
+
+            <!-- Subject list for selected category (separate panel) -->
+            <div id="subjectList" class="subject-list">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div class="email-content" id="emailContent">
+                <div class="email-display" id="emailDisplay">
+                    <div class="email-placeholder">
+                        Select a category to view emails
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Chat UI -->
+        <div class="section chat-section">
+            <div class="section-title">Chat UI</div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message ai">
+                    <div class="chat-bubble">
+                        Hello! I'm your email assistant. Ask me anything about your emails.
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Type your message here..."
+                    autocomplete="off"
+                />
+                <button class="send-button" id="sendButton">
+                    ✈
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let allEmails = [];
+        let currentCategory = null;
+        let currentEmailId = null;
+        const API_BASE_URL = 'http://localhost:5000';
+
+        // DOM Elements
+        const categoryCards = document.querySelectorAll('.category-card');
+    const emailContent = document.getElementById('emailContent');
+    const emailDisplay = document.getElementById('emailDisplay');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const subjectListEl = document.getElementById('subjectList');
+
+        // Initialize app
+        async function init() {
+            await fetchEmails();
+            setupEventListeners();
+        }
+
+
+        // Fetch all emails from backend
+        async function fetchEmails() {
+            try {
+                showLoadingInEmail();
+                const response = await fetch(`${API_BASE_URL}/get_emails`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.emails) {
+                    allEmails = data.emails;
+                    console.log('allEmails:', allEmails);
+                    showPlaceholder();
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error fetching emails:', error);
+                showErrorInEmail('Failed to load emails. Please check if the backend is running.');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Category card clicks
+            categoryCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const category = card.dataset.category;
+                    selectCategory(category, card);
+                });
+            });
+
+            // Chat send button
+            sendButton.addEventListener('click', sendMessage);
+
+            // Chat input enter key
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        // Select category and display subjects list
+        function selectCategory(category, cardElement) {
+            currentCategory = category;
+
+            // Update active state
+            categoryCards.forEach(card => card.classList.remove('active'));
+            cardElement.classList.add('active');
+
+            // Filter emails by category. If 'all', don't filter.
+            let filteredEmails = [];
+            if (category === 'all') {
+                filteredEmails = allEmails.slice();
+            } else {
+                filteredEmails = allEmails.filter(email => {
+                    return email.classification && 
+                           email.classification.category && 
+                           email.classification.category.toLowerCase() === category.toLowerCase();
+                });
+            }
+
+            console.log('filteredEmails:', filteredEmails);
+
+            if (filteredEmails.length > 0) {
+                displayEmailList(filteredEmails);
+                // auto-select first subject
+                displayEmail(filteredEmails[0]);
+                // determine id used in subject items
+                const firstId = filteredEmails[0].id !== undefined ? filteredEmails[0].id : filteredEmails[0]._id || 0;
+                highlightSubjectItem(firstId);
+            } else {
+                clearSubjectList();
+                showNoEmailsMessage(category);
+            }
+        }
+
+        // Display list of subjects for a category
+        function displayEmailList(emails) {
+            subjectListEl.innerHTML = '';
+            emails.forEach(email => {
+                const item = document.createElement('div');
+                item.className = 'subject-item';
+                // use id if available to uniquely identify
+                const eid = email.id !== undefined ? email.id : Math.random();
+                item.dataset.emailId = eid;
+                item.textContent = (email.subject && email.subject.trim()) ? email.subject : '(No Subject)';
+                item.title = email.from ? `From: ${email.from}` : '';
+                item.addEventListener('click', () => {
+                    displayEmail(email);
+                    highlightSubjectItem(eid);
+                });
+                subjectListEl.appendChild(item);
+            });
+        }
+
+        function highlightSubjectItem(emailId) {
+            currentEmailId = emailId;
+            const items = subjectListEl.querySelectorAll('.subject-item');
+            items.forEach(it => {
+                // dataset property is camelCase for emailId
+                if (String(it.dataset.emailId) === String(emailId)) {
+                    it.classList.add('active');
+                    // ensure active item is visible in the subject list
+                    try { it.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch(e) {}
+                } else {
+                    it.classList.remove('active');
+                }
+            });
+        }
+
+        function clearSubjectList() {
+            subjectListEl.innerHTML = '';
+            currentEmailId = null;
+        }
+
+        // Display email in the middle section
+        function displayEmail(email) {
+            const html = `
+                <div class="menu-icon">☰</div>
+                <div class="email-header">
+                    <div class="email-subject-label">Subject</div>
+                    <div class="email-subject">${escapeHtml(email.subject || 'No Subject')}</div>
+                    <div class="email-from">${escapeHtml(email.from || 'Unknown Sender')}</div>
+                    <div class="email-date">${escapeHtml(email.date || '')}</div>
+                </div>
+                <div class="email-divider"></div>
+                <div class="email-body">${escapeHtml(email.body || 'No content')}</div>
+            `;
+            emailDisplay.innerHTML = html;
+        }
+
+        // Show placeholder message
+        function showPlaceholder() {
+            clearSubjectList();
+            emailDisplay.innerHTML = `
+                <div class="email-placeholder">
+                    Select a category to view emails
+                </div>
+            `;
+        }
+
+        // Show no emails message
+        function showNoEmailsMessage(category) {
+            emailDisplay.innerHTML = `
+                <div class="email-placeholder">
+                    No ${escapeHtml(category)} emails found
+                </div>
+            `;
+        }
+
+        // Show loading in email section
+        function showLoadingInEmail() {
+            subjectListEl.innerHTML = '';
+            emailDisplay.innerHTML = `
+                <div class="loading-indicator">
+                    <div class="loading"></div>
+                    <p>Loading emails...</p>
+                </div>
+            `;
+        }
+
+        // Show error in email section
+        function showErrorInEmail(message) {
+            subjectListEl.innerHTML = '';
+            emailDisplay.innerHTML = `
+                <div class="error-message">
+                    ${escapeHtml(message)}
+                </div>
+            `;
+        }
+
+        // Send chat message
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+
+            // Display user message
+            addChatMessage(message, 'user');
+            chatInput.value = '';
+
+            // Disable input while processing
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+
+            try {
+                // Call backend API
+                const response = await fetch(`${API_BASE_URL}/run_query?query=${encodeURIComponent(message)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.response) {
+                    addChatMessage(data.response, 'ai');
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addChatMessage('Sorry, I encountered an error. Please make sure the backend is running.', 'ai');
+            } finally {
+                // Re-enable input
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        // Add message to chat
+        function addChatMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'chat-bubble';
+            bubbleDiv.textContent = text;
+            
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Auto-scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>

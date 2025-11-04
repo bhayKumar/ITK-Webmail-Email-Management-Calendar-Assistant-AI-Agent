@@ -332,10 +332,11 @@ Question:
 ```bash
 # 1. Clone the repositorygit clone [repository-url]cd [project-directory]
 # 2. Install dependenciespip install -r requirements.txt
-# 3. Set up Google Cloud credentials# Place credentials.json in project root
-# 4. Configure IITK credentials# Update EMAIL_CREDENTIALS in flask_backend_code.py
-# 5. Run the Flask apppython flask_backend_code.py
-# 6. Open browser to http://localhost:5000
+# 3. Generate your Gemini API key and put it in placholder in Backend Code
+# 4. Set up Google Cloud credentials# Place credentials.json in project root
+# 5. Configure IITK credentials # Update EMAIL_CREDENTIALS in flask_backend_code.py (contact me if you want one at my given contact) 
+# 6. Run the Flask apppython flask_backend_code.py
+# 7. Open browser to http://localhost:5000
 ```
 
 ---

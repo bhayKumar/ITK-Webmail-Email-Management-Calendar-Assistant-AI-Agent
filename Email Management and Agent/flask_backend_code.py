@@ -33,7 +33,7 @@ CORS(app)
 # Configuration
 IMAP_SERVER = "newmailhost.cc.iitk.ac.in"
 IMAP_PORT = 993
-GEMINI_API_KEY = "AIzaSyAwQhQ_FVR2ZmheVLbVxdUi9JUWOVF5rfM"
+GEMINI_API_KEY = "" #Enter your Gemini Api key here
 
 # OAuth dev port and redirect URI - keep this in sync with Google Cloud Console
 OAUTH_PORT = 8080
